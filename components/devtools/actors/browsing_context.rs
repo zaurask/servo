@@ -99,6 +99,7 @@ pub struct BrowsingContextActorMsg {
     outerWindowID: u32,
     browsingContextId: u32,
     consoleActor: String,
+    threadActor: String,
     /*emulationActor: String,
     inspectorActor: String,
     timelineActor: String,
@@ -327,6 +328,7 @@ impl BrowsingContextActor {
             //FIXME: shouldn't ignore pipeline namespace field
             outerWindowID: self.active_pipeline.get().index.0.get(),
             consoleActor: self.console.clone(),
+            threadActor: self.thread.clone(),
             /*emulationActor: self.emulation.clone(),
             inspectorActor: self.inspector.clone(),
             timelineActor: self.timeline.clone(),

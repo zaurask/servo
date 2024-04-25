@@ -7,9 +7,11 @@ use std::net::TcpStream;
 use serde::Serialize;
 use serde_json::{Map, Value};
 
+use super::watcher::WatcherTraits;
 use crate::actor::{Actor, ActorMessageStatus, ActorRegistry};
 use crate::actors::browsing_context::{BrowsingContextActor, BrowsingContextActorMsg};
 use crate::actors::root::RootActor;
+use crate::actors::watcher::WatcherActor;
 use crate::protocol::JsonPacketStream;
 use crate::StreamId;
 
@@ -44,9 +46,17 @@ struct GetFaviconReply {
     favicon: String,
 }
 
+#[derive(Serialize)]
+struct GetWacherReply {
+    from: String,
+    actor: String,
+    traits: WatcherTraits,
+}
+
 pub struct TabDescriptorActor {
     name: String,
     browsing_context_actor: String,
+    watcher_actor_name: String,
 }
 
 impl Actor for TabDescriptorActor {
@@ -82,6 +92,14 @@ impl Actor for TabDescriptorActor {
                 });
                 ActorMessageStatus::Processed
             },
+            "getWatcher" => {
+                let _ = stream.write_json_packet(&GetWacherReply {
+                    from: self.name(),
+                    actor: self.watcher_actor_name.clone(),
+                    traits: WatcherTraits::new(),
+                });
+                ActorMessageStatus::Processed
+            },
             _ => ActorMessageStatus::Ignored,
         })
     }
@@ -93,11 +111,18 @@ impl TabDescriptorActor {
         browsing_context_actor: String,
     ) -> TabDescriptorActor {
         let name = actors.new_name("tabDescription");
+        // TODO: move watcher actor creation to getWatcher
+        // message handling
+        let watcher = WatcherActor::new(actors, browsing_context_actor.clone());
+        let watcher_actor_name = watcher.name();
+        actors.register(Box::new(watcher));
+
         let root = actors.find_mut::<RootActor>("root");
         root.tabs.push(name.clone());
         TabDescriptorActor {
             name,
             browsing_context_actor,
+            watcher_actor_name,
         }
     }
 

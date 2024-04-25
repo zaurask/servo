@@ -68,6 +68,7 @@ mod actors {
     pub mod tab;
     pub mod thread;
     pub mod timeline;
+    pub mod watcher;
     pub mod worker;
 }
 mod protocol;
